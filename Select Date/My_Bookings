@@ -1,0 +1,233 @@
+package com.zahabia.Appointment;
+
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
+import android.content.Intent;
+import android.widget.Button;
+import android.widget.DatePicker;
+import android.widget.EditText;
+import com.zahabia.R;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
+public class My_Bookings extends CommonDrawer implements View.OnClickListener {
+   
+    private int mYear, mMonth, mDay, mHour, mMinute;
+    EditText et_date, et_time;
+    int serviceid;
+
+
+    @Override
+    public int setLayout() {
+        return R.layout.activity_my_bookings;
+    }
+
+    @Override
+    public void onLayoutCreated() {
+
+        navigationView.setCheckedItem(R.id.nav_booking);
+        drawerIcon = (ImageButton) findViewById(R.id.drawer_image);
+        drawerLayout = (LinearLayout) findViewById(R.id.drawer_menu);
+        et_date = (EditText) findViewById(R.id.selectedDate);
+        et_time = (EditText) findViewById(R.id.selectedTime);
+        navigationView.setCheckedItem(R.id.nav_booking);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String name = preferences.getString("name", "");
+        serviceid = Integer.parseInt(name);
+        et_time.setOnClickListener(this);
+        et_date.setOnClickListener(this);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+
+            case R.id.confirmBookingButton:
+                if (db.checkForTables()) {
+                    if (et_date.getText().toString().isEmpty()) {
+                        Toast.makeText(this, " Please Enter Date/Time", Toast.LENGTH_SHORT).show();
+                    } else if (et_time.getText().toString().isEmpty()) {
+                        Toast.makeText(this, " Please Enter Date/Time", Toast.LENGTH_SHORT).show();
+                    } else {
+                        validationForTime();
+                    }
+                } else {
+                    Toast.makeText(this, "Please select the services", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.drawer_image:
+            case R.id.drawer_menu:
+                drawer.openDrawer(Gravity.LEFT);
+                break;
+
+            case R.id.selectedDate:
+                final Calendar c = Calendar.getInstance();
+                mYear = c.get(Calendar.YEAR);
+                mMonth = c.get(Calendar.MONTH);
+                mDay = c.get(Calendar.DAY_OF_MONTH);
+
+                DatePickerDialog datePickerDialog = new DatePickerDialog(this, R.style.TimePickerTheme,
+                        new DatePickerDialog.OnDateSetListener() {
+
+                            @Override
+                            public void onDateSet(DatePicker view, int year,
+                                                  int monthOfYear, int dayOfMonth) {
+
+                                String mDate = convertDate(convertToMillis(dayOfMonth, monthOfYear, year));
+                                et_date.setText(mDate);
+
+                            }
+                        }, mYear, mMonth, mDay);
+                datePickerDialog.show();
+                datePickerDialog.setCanceledOnTouchOutside(false);
+                break;
+
+            case R.id.selectedTime:
+                final Calendar b = Calendar.getInstance();
+                mHour = b.get(Calendar.HOUR_OF_DAY);
+                mMinute = b.get(Calendar.MINUTE);
+                // Launch Time Picker Dialog
+                final TimePickerDialog timePickerDialog = new TimePickerDialog(this, R.style.TimePickerTheme,
+                        new TimePickerDialog.OnTimeSetListener() {
+
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay,
+                                                  int minute) {
+
+                                String mDate = convertTime(convertTimeToMillis(hourOfDay, minute));
+                                et_time.setText(mDate);
+                            }
+                        }, mHour, mMinute, false);
+                timePickerDialog.setCanceledOnTouchOutside(false);
+                timePickerDialog.show();
+                break;
+        }
+    }
+
+    private void validationForTime() {
+        final Calendar c = Calendar.getInstance();
+        SimpleDateFormat dftime = new SimpleDateFormat("HH:mm");
+        SimpleDateFormat dfDate = new SimpleDateFormat("yyyy-MM-dd");
+        String date1 = dfDate.format(Date.parse(et_date.getText().toString()));
+        String date2 = dfDate.format(Date.parse(String.valueOf(c.getTime())));
+
+
+        try {
+            Date date = new SimpleDateFormat("hh:mm a").parse(et_time.getText().toString());
+            String selectedtime = dftime.format(date);
+            String currentTime = dftime.format(Date.parse(String.valueOf(c.getTime())));
+
+            c.setTime(c.getTime());
+            c.add(Calendar.HOUR, 2);
+            String twoplusTime = dftime.format(c.getTime());
+
+            if (dftime.parse(selectedtime).before(dftime.parse(currentTime))) {
+                if (dfDate.parse(date1).before(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the future Date & Time", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).after(dftime.parse("20:00"))) {
+                if (dfDate.parse(date1).after(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the Time before 08:00pm", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).before(dftime.parse("10:00"))) {
+                if (dfDate.parse(date1).after(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the Time after 10:00am", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).before(dftime.parse(currentTime))) {
+                if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the future Date & Time", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).after(dftime.parse(twoplusTime)) && dftime.parse(selectedtime).after(dftime.parse("20:00"))) {
+                if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the Time before 08:00pm", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).equals(dftime.parse(currentTime))) {
+                if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the time after 2 hour", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).after(dftime.parse(currentTime))) {
+                if (dfDate.parse(date1).before(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the future Date & Time", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).after(dftime.parse(twoplusTime)) && dftime.parse(selectedtime).before(dftime.parse("20:00"))) {
+                if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
+                    Intent intent = new Intent(My_Bookings.this, Appointment_description.class);
+                    intent.putExtra("bookingNote", et_booking_note.getText().toString());
+                    insertDateTime();
+                    startActivity(intent);
+                }
+            }
+            if (dftime.parse(selectedtime).after(dftime.parse("10:00")) && dftime.parse(selectedtime).before(dftime.parse("20:00"))) {
+                if (dfDate.parse(date1).after(dfDate.parse(date2))) {
+                    Intent intent = new Intent(My_Bookings.this, Appointment_description.class);
+                    intent.putExtra("bookingNote", et_booking_note.getText().toString());
+                    insertDateTime();
+                    startActivity(intent);
+                }
+            }
+            if (dftime.parse(selectedtime).before(dftime.parse(twoplusTime))) {
+                if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
+                    Toast.makeText(this, "Please select the time after 2 hour", Toast.LENGTH_SHORT).show();
+                }
+            }
+            if (dftime.parse(selectedtime).equals(dftime.parse(twoplusTime)) && dftime.parse(selectedtime).before(dftime.parse("20:00"))) {
+                if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
+                    Intent intent = new Intent(My_Bookings.this, Appointment_description.class);
+                    intent.putExtra("bookingNote", et_booking_note.getText().toString());
+                    insertDateTime();
+                    startActivity(intent);
+                }
+            }
+
+        } catch (ParseException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
+    }
+
+    private void insertDateTime() {
+        String id = "1";
+        String date = et_date.getText().toString().trim();
+        String time = et_time.getText().toString().trim();
+        String note = et_booking_note.getText().toString().trim();
+        db.addDateTime(id, date, time, note);
+    }
+
+    public String convertDate(long mTime) {
+        SimpleDateFormat df = new SimpleDateFormat("EEE, dd MMM, yyyy");
+        String formattedDate = df.format(mTime);
+        return formattedDate;
+    }
+
+    public long convertToMillis(int day, int month, int year) {
+        final Calendar calendarStart = Calendar.getInstance();
+        calendarStart.set(Calendar.YEAR, year);
+        calendarStart.set(Calendar.MONTH, month);
+        calendarStart.set(Calendar.DAY_OF_MONTH, day);
+        return calendarStart.getTimeInMillis();
+    }
+
+    public String convertTime(long mTime) {
+        SimpleDateFormat df = new SimpleDateFormat("hh:mm a");
+        String formattedDate = df.format(mTime);
+        return formattedDate;
+    }
+
+    public long convertTimeToMillis(int hour, int minute) {
+        final Calendar calendarStart = Calendar.getInstance();
+        calendarStart.set(Calendar.HOUR_OF_DAY, hour);
+        calendarStart.set(Calendar.MINUTE, minute);
+        return calendarStart.getTimeInMillis();
+    }L̥
+}
