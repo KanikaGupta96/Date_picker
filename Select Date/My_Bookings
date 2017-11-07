@@ -162,16 +162,12 @@ public class My_Bookings extends CommonDrawer implements View.OnClickListener {
             if (dftime.parse(selectedtime).after(dftime.parse(twoplusTime)) && dftime.parse(selectedtime).before(dftime.parse("20:00"))) {
                 if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
                     Intent intent = new Intent(My_Bookings.this, Appointment_description.class);
-                    intent.putExtra("bookingNote", et_booking_note.getText().toString());
-                    insertDateTime();
                     startActivity(intent);
                 }
             }
             if (dftime.parse(selectedtime).after(dftime.parse("10:00")) && dftime.parse(selectedtime).before(dftime.parse("20:00"))) {
                 if (dfDate.parse(date1).after(dfDate.parse(date2))) {
                     Intent intent = new Intent(My_Bookings.this, Appointment_description.class);
-                    intent.putExtra("bookingNote", et_booking_note.getText().toString());
-                    insertDateTime();
                     startActivity(intent);
                 }
             }
@@ -183,8 +179,6 @@ public class My_Bookings extends CommonDrawer implements View.OnClickListener {
             if (dftime.parse(selectedtime).equals(dftime.parse(twoplusTime)) && dftime.parse(selectedtime).before(dftime.parse("20:00"))) {
                 if (dfDate.parse(date1).equals(dfDate.parse(date2))) {
                     Intent intent = new Intent(My_Bookings.this, Appointment_description.class);
-                    intent.putExtra("bookingNote", et_booking_note.getText().toString());
-                    insertDateTime();
                     startActivity(intent);
                 }
             }
@@ -194,14 +188,6 @@ public class My_Bookings extends CommonDrawer implements View.OnClickListener {
             e.printStackTrace();
         }
 
-    }
-
-    private void insertDateTime() {
-        String id = "1";
-        String date = et_date.getText().toString().trim();
-        String time = et_time.getText().toString().trim();
-        String note = et_booking_note.getText().toString().trim();
-        db.addDateTime(id, date, time, note);
     }
 
     public String convertDate(long mTime) {
